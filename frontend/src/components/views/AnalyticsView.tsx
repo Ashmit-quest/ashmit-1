@@ -1,31 +1,75 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ArrowUpRight, Activity, Users, Share2, MousePointerClick } from 'lucide-react';
 import { AnimatedNumber } from '@/components/ui/animated-number';
+import { toast } from 'sonner';
 
-const performanceData = [
-  { name: 'Mon', views: 4000, engagement: 2400 },
-  { name: 'Tue', views: 3000, engagement: 1398 },
-  { name: 'Wed', views: 5000, engagement: 3800 },
-  { name: 'Thu', views: 2780, engagement: 3908 },
-  { name: 'Fri', views: 6890, engagement: 4800 },
-  { name: 'Sat', views: 4390, engagement: 3800 },
-  { name: 'Sun', views: 5490, engagement: 4300 },
-];
+// Mock data sets for different select timeframes
+const performanceDataMap = {
+  '7days': [
+    { name: 'Mon', views: 4000, engagement: 2400 },
+    { name: 'Tue', views: 3000, engagement: 1398 },
+    { name: 'Wed', views: 5000, engagement: 3800 },
+    { name: 'Thu', views: 2780, engagement: 3908 },
+    { name: 'Fri', views: 6890, engagement: 4800 },
+    { name: 'Sat', views: 4390, engagement: 3800 },
+    { name: 'Sun', views: 5490, engagement: 4300 },
+  ],
+  '30days': [
+    { name: 'Week 1', views: 18000, engagement: 12000 },
+    { name: 'Week 2', views: 24000, engagement: 17000 },
+    { name: 'Week 3', views: 32000, engagement: 21000 },
+    { name: 'Week 4', views: 41000, engagement: 28000 },
+  ],
+  'quarter': [
+    { name: 'Jan', views: 120000, engagement: 84000 },
+    { name: 'Feb', views: 154000, engagement: 98000 },
+    { name: 'Mar', views: 198000, engagement: 129000 },
+  ]
+};
 
-const platformData = [
-  { name: 'Instagram', value: 45, color: '#ec4899' },
-  { name: 'Twitter', value: 25, color: '#0ea5e9' },
-  { name: 'LinkedIn', value: 20, color: '#3b82f6' },
-  { name: 'YouTube', value: 10, color: '#ef4444' },
-];
+const platformDataMap = {
+  '7days': [
+    { name: 'Instagram', value: 45, color: '#ec4899' },
+    { name: 'Twitter', value: 25, color: '#0ea5e9' },
+    { name: 'LinkedIn', value: 20, color: '#3b82f6' },
+    { name: 'YouTube', value: 10, color: '#ef4444' },
+  ],
+  '30days': [
+    { name: 'Instagram', value: 40, color: '#ec4899' },
+    { name: 'Twitter', value: 30, color: '#0ea5e9' },
+    { name: 'LinkedIn', value: 18, color: '#3b82f6' },
+    { name: 'YouTube', value: 12, color: '#ef4444' },
+  ],
+  'quarter': [
+    { name: 'Instagram', value: 38, color: '#ec4899' },
+    { name: 'Twitter', value: 28, color: '#0ea5e9' },
+    { name: 'LinkedIn', value: 22, color: '#3b82f6' },
+    { name: 'YouTube', value: 12, color: '#ef4444' },
+  ]
+};
 
-const stats = [
-  { label: 'Audience Growth', value: '+12.5%', icon: Users, color: 'text-purple-400', bg: 'bg-purple-400/10' },
-  { label: 'Avg. Engagement', value: '8.4%', icon: Activity, color: 'text-pink-400', bg: 'bg-pink-400/10' },
-  { label: 'Click-Through', value: '3.2%', icon: MousePointerClick, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  { label: 'Total Shares', value: '24.5K', icon: Share2, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-];
+const statsMap = {
+  '7days': [
+    { label: 'Audience Growth', value: '+12.5%', icon: Users, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { label: 'Avg. Engagement', value: '8.4%', icon: Activity, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+    { label: 'Click-Through', value: '3.2%', icon: MousePointerClick, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { label: 'Total Shares', value: '24.5K', icon: Share2, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  ],
+  '30days': [
+    { label: 'Audience Growth', value: '+28.4%', icon: Users, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { label: 'Avg. Engagement', value: '9.1%', icon: Activity, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+    { label: 'Click-Through', value: '3.8%', icon: MousePointerClick, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { label: 'Total Shares', value: '98.2K', icon: Share2, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  ],
+  'quarter': [
+    { label: 'Audience Growth', value: '+84.2%', icon: Users, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { label: 'Avg. Engagement', value: '10.5%', icon: Activity, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+    { label: 'Click-Through', value: '4.1%', icon: MousePointerClick, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { label: 'Total Shares', value: '312K', icon: Share2, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  ]
+};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -59,6 +103,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function AnalyticsView() {
+  const [timeframe, setTimeframe] = useState<'7days' | '30days' | 'quarter'>('7days');
+
+  const currentPerformanceData = performanceDataMap[timeframe];
+  const currentPlatformData = platformDataMap[timeframe];
+  const currentStats = statsMap[timeframe];
+
+  const handleExportReport = () => {
+    toast.success('Preparing analytical export...', {
+      description: `Downloading ContentOS report for timeframe: ${timeframe === '7days' ? 'Last 7 Days' : timeframe === '30days' ? 'Last 30 Days' : 'This Quarter'}.`
+    });
+  };
+
   return (
     <div className="space-y-8 pb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -79,15 +135,24 @@ export function AnalyticsView() {
             Measure your content performance and audience growth.
           </motion.p>
         </div>
-        <div className="flex gap-2">
-          <select className="bg-white/5 border border-white/10 text-white text-sm rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>This Quarter</option>
+        <div className="flex gap-2 relative z-30">
+          <select 
+            value={timeframe}
+            onChange={(e) => {
+              setTimeframe(e.target.value as any);
+              toast.success(`Timeframe updated to ${e.target.options[e.target.selectedIndex].text}`);
+            }}
+            className="bg-white/5 border border-white/10 text-white text-sm rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium cursor-pointer"
+          >
+            <option value="7days" className="bg-[#111115]">Last 7 Days</option>
+            <option value="30days" className="bg-[#111115]">Last 30 Days</option>
+            <option value="quarter" className="bg-[#111115]">This Quarter</option>
           </select>
+          
           <motion.button 
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
+            onClick={handleExportReport}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-xl font-medium shadow-glow transition-all"
           >
             Export Report
@@ -99,9 +164,10 @@ export function AnalyticsView() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
+        key={timeframe + 'stats'}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        {stats.map((stat) => {
+        {currentStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <motion.div
@@ -134,6 +200,7 @@ export function AnalyticsView() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.25, type: 'spring' }}
+          key={timeframe + 'views'}
           className="lg:col-span-2 glass-card rounded-2xl p-6 border-white/5 shadow-elegant"
         >
           <div className="mb-6">
@@ -142,7 +209,7 @@ export function AnalyticsView() {
           </div>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={currentPerformanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
@@ -168,6 +235,7 @@ export function AnalyticsView() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, type: 'spring' }}
+          key={timeframe + 'dist'}
           className="glass-card rounded-2xl p-6 border-white/5 flex flex-col shadow-elegant"
         >
           <div className="mb-6">
@@ -176,7 +244,7 @@ export function AnalyticsView() {
           </div>
           
           <div className="flex-1 flex flex-col justify-center space-y-6">
-            {platformData.map((item, idx) => (
+            {currentPlatformData.map((item, idx) => (
               <div key={item.name} className="space-y-2">
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-white">{item.name}</span>
