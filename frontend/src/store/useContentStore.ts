@@ -34,6 +34,11 @@ interface ContentStore {
   notifications: NotificationItem[];
   markAllNotificationsRead: () => void;
   addNotification: (title: string, desc: string) => void;
+  // Theme & Accent customized states
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  accentColor: string;
+  setAccentColor: (color: string) => void;
 }
 
 export const useContentStore = create<ContentStore>((set) => ({
@@ -42,6 +47,12 @@ export const useContentStore = create<ContentStore>((set) => ({
   searchQuery: '',
   setSearchQuery: (query) => set({ searchQuery: query }),
   
+  // Theme and accent defaults
+  theme: 'dark',
+  setTheme: (theme) => set({ theme }),
+  accentColor: 'purple',
+  setAccentColor: (accentColor) => set({ accentColor }),
+
   posts: [
     { id: 't1', title: 'Top 10 UI Trends 2024', tag: 'Blog', platform: 'Website', comments: 3, attachments: 1, columnId: 'ideas', status: 'Draft', date: new Date() },
     { id: 't2', title: 'Behind the scenes reel', tag: 'Instagram', platform: 'Instagram', comments: 0, attachments: 2, columnId: 'ideas', status: 'Draft', date: new Date() },
