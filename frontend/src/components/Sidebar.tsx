@@ -32,16 +32,50 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 border-r border-white/10 bg-black/20 backdrop-blur-xl flex flex-col z-20">
-      <div className="p-6 flex items-center gap-3">
+      <div className="p-6 flex items-center gap-3 group cursor-pointer">
         <motion.div 
           initial={{ rotate: -10, scale: 0.9 }}
           animate={{ rotate: 0, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 10 }}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-glow"
+          whileHover={{ 
+            rotate: [0, -15, 15, -15, 0],
+            scale: 1.1,
+            transition: { duration: 0.5, ease: "easeInOut" }
+          }}
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-glow relative overflow-hidden"
         >
-          <PenTool className="text-white" size={20} />
+          {/* Shine effect over the icon */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent w-full h-full"
+            initial={{ x: '-100%', y: '-100%' }}
+            animate={{ x: '100%', y: '100%' }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "linear", repeatDelay: 1 }}
+          />
+          <PenTool className="text-white relative z-10" size={20} />
         </motion.div>
-        <span className="font-bold text-xl tracking-tight text-white">ContentOS</span>
+        
+        <div className="flex font-bold text-xl tracking-tight text-white overflow-hidden">
+          {["C", "o", "n", "t", "e", "n", "t", "O", "S"].map((letter, index) => (
+            <motion.span 
+              key={index}
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              whileHover={{ 
+                y: -4, 
+                color: "#d8b4fe", // purple-300
+                transition: { duration: 0.2 } 
+              }}
+              transition={{ 
+                delay: index * 0.05, 
+                type: "spring", 
+                stiffness: 200, 
+                damping: 10 
+              }}
+              className="inline-block"
+            >
+              {letter}
+            </motion.span>
+          ))}
+        </div>
       </div>
 
       <motion.nav 
