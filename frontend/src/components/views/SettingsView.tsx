@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Bell, Shield, Palette, CreditCard, LayoutGrid, 
-  Check, Key, Smartphone, Laptop, Moon, Sun, Monitor
+  Check, Key, Smartphone, Laptop, Moon, Sun, Monitor,
+  Github, Slack, Trello, Twitter
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -54,21 +55,26 @@ export function SettingsView() {
   const handleThemeChange = (newTheme: 'system' | 'light' | 'dark') => {
     setTheme(newTheme);
     toast.success(`Theme set to ${newTheme}`);
-    // Live update DOM classes or attributes to visually reflect the theme preference
+    // Dynamically apply theme properties to root document
     const root = window.document.documentElement;
     if (newTheme === 'dark') {
       root.classList.add('dark');
       root.style.setProperty('--background', '240 10% 4%');
       root.style.setProperty('--foreground', '0 0% 98%');
+      root.style.setProperty('--card', '240 10% 6%');
+      root.style.setProperty('--card-foreground', '0 0% 98%');
     } else if (newTheme === 'light') {
       root.classList.remove('dark');
       root.style.setProperty('--background', '0 0% 98%');
       root.style.setProperty('--foreground', '240 10% 4%');
+      root.style.setProperty('--card', '0 0% 100%');
+      root.style.setProperty('--card-foreground', '240 10% 4%');
     } else {
-      // System: simple dark default fallback
       root.classList.add('dark');
       root.style.setProperty('--background', '240 10% 4%');
       root.style.setProperty('--foreground', '0 0% 98%');
+      root.style.setProperty('--card', '240 10% 6%');
+      root.style.setProperty('--card-foreground', '0 0% 98%');
     }
   };
 
@@ -77,7 +83,7 @@ export function SettingsView() {
     toast.success(`Accent color updated to ${color}`);
     
     const root = window.document.documentElement;
-    // Map colors to HSL primary variables
+    // Map colors to primary theme HSL variables
     const colorMap: Record<string, string> = {
       purple: '270 100% 65%',
       pink: '320 100% 60%',
@@ -133,7 +139,8 @@ export function SettingsView() {
                     transition={{ type: 'spring', stiffness: 150, damping: 18 }}
                   />
                 )}
-                <Icon size={18} className={`relative z-10 ${isActive ? 'text-primary' : ''}`} style={{ color: isActive ? 'hsl(var(--primary))' : undefined }} />
+                {/* Dynamically style the icon using primary color when active */}
+                <Icon size={18} className="relative z-10" style={{ color: isActive ? 'hsl(var(--primary))' : undefined }} />
                 <span className="relative z-10">{tab.label}</span>
               </button>
             );
@@ -256,7 +263,7 @@ export function SettingsView() {
                           checked={notifications[item.id as keyof typeof notifications]}
                           onChange={() => handleToggleNotification(item.id as keyof typeof notifications)}
                         />
-                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white  after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
                       </label>
                     </div>
                   ))}
@@ -284,7 +291,7 @@ export function SettingsView() {
                         onClick={() => handleThemeChange(t.id as any)}
                         className={`flex flex-col items-center justify-center p-6 rounded-xl border transition-all ${
                           theme === t.id 
-                            ? 'bg-primary/10 border-primary text-primary' 
+                            ? 'bg-purple-500/10 border-purple-500 text-purple-400' 
                             : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
                         }`}
                         style={{ 
@@ -357,7 +364,7 @@ export function SettingsView() {
                         <p className="text-muted-foreground text-sm">Add an extra layer of security</p>
                       </div>
                     </div>
-                    <Button onClick={handle2FA} className="bg-primary hover:bg-primary/90 text-white">
+                    <Button onClick={handle2FA} className="bg-purple-600 hover:bg-purple-500 text-white">
                       Enable 2FA
                     </Button>
                   </div>
@@ -366,7 +373,7 @@ export function SettingsView() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-bold text-white">Active Sessions</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-primary/30" style={{ borderColor: 'rgba(var(--primary), 0.3)' }}>
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-purple-500/30">
                       <div className="flex items-center gap-4">
                         <Laptop size={20} className="text-muted-foreground" />
                         <div>
@@ -374,7 +381,7 @@ export function SettingsView() {
                           <p className="text-muted-foreground text-xs">San Francisco, US • Current Session</p>
                         </div>
                       </div>
-                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">Active Now</span>
+                      <span className="text-xs font-bold text-purple-400 bg-purple-400/10 px-2 py-1 rounded">Active Now</span>
                     </div>
                     <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                       <div className="flex items-center gap-4">
@@ -438,7 +445,7 @@ export function SettingsView() {
                         <p className="text-muted-foreground text-xs">Expires 12/2024</p>
                       </div>
                     </div>
-                    <Button onClick={() => toast.success('Update payment method dialog opened')} variant="ghost" className="text-primary hover:text-primary-foreground hover:bg-primary/10">
+                    <Button onClick={() => toast.success('Update payment method dialog opened')} variant="ghost" className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10">
                       Update
                     </Button>
                   </div>

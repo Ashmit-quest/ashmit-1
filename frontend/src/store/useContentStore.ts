@@ -34,7 +34,7 @@ interface ContentStore {
   notifications: NotificationItem[];
   markAllNotificationsRead: () => void;
   addNotification: (title: string, desc: string) => void;
-  // Theme & Accent customized states
+  // Theme & Accent customized states stored globally to ensure Settings actually update styles
   theme: 'light' | 'dark' | 'system';
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   accentColor: string;
