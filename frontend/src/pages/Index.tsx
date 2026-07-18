@@ -9,6 +9,7 @@ import { AnalyticsView } from '@/components/views/AnalyticsView';
 import { SettingsView } from '@/components/views/SettingsView';
 import { useContentStore } from '@/store/useContentStore';
 import { Toaster } from 'sonner';
+import { Starfield } from '@/components/ui/starfield';
 
 export default function Index() {
   const { activeTab } = useContentStore();
@@ -29,16 +30,19 @@ export default function Index() {
   };
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans relative">
       <Toaster theme="dark" position="top-right" className="bg-[#111115] border-white/10 text-white" />
       
+      {/* Animated Starfield Background */}
+      <Starfield />
+      
       {/* Background Ambient Glows */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-teal-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-teal-600/10 blur-[120px] pointer-events-none z-0" />
 
       <Sidebar />
       
-      <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
+      <div className="flex-1 flex flex-col relative z-20 overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
           <AnimatePresence mode="wait">
