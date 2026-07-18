@@ -32,49 +32,60 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 border-r border-white/10 bg-black/20 backdrop-blur-xl flex flex-col z-20">
-      <div className="p-6 flex items-center gap-3 group cursor-pointer">
+      <div className="p-6 flex items-center gap-3 group cursor-pointer mt-2">
+        {/* Rotating Icon Box */}
         <motion.div 
-          initial={{ rotate: -10, scale: 0.9 }}
-          animate={{ rotate: 0, scale: 1 }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           whileHover={{ 
-            rotate: [0, -15, 15, -15, 0],
-            scale: 1.1,
-            transition: { duration: 0.5, ease: "easeInOut" }
+            scale: 1.15, 
+            borderRadius: "50%",
+            boxShadow: "0 0 30px rgba(168, 85, 247, 0.6)"
           }}
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-glow relative overflow-hidden"
+          className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-500 to-teal-400 flex items-center justify-center shadow-glow relative overflow-hidden flex-shrink-0"
         >
-          {/* Shine effect over the icon */}
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent w-full h-full"
-            initial={{ x: '-100%', y: '-100%' }}
-            animate={{ x: '100%', y: '100%' }}
-            transition={{ repeat: Infinity, duration: 2.5, ease: "linear", repeatDelay: 1 }}
-          />
-          <PenTool className="text-white relative z-10" size={20} />
+          {/* Counter-Rotation to keep the PenTool icon upright while the box spins */}
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            className="relative z-10 flex items-center justify-center w-full h-full"
+          >
+            <PenTool className="text-white drop-shadow-md" size={20} />
+          </motion.div>
         </motion.div>
         
-        <div className="flex font-bold text-xl tracking-tight text-white overflow-hidden">
-          {["C", "o", "n", "t", "e", "n", "t", "O", "S"].map((letter, index) => (
-            <motion.span 
-              key={index}
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              whileHover={{ 
-                y: -4, 
-                color: "#d8b4fe", // purple-300
-                transition: { duration: 0.2 } 
-              }}
-              transition={{ 
-                delay: index * 0.05, 
-                type: "spring", 
-                stiffness: 200, 
-                damping: 10 
-              }}
-              className="inline-block"
-            >
-              {letter}
-            </motion.span>
-          ))}
+        {/* Animated Typography */}
+        <div className="flex font-bold text-2xl tracking-tight text-white overflow-hidden pb-1">
+          {["C", "o", "n", "t", "e", "n", "t", "O", "S"].map((letter, index) => {
+            const isO = letter === "O";
+            return (
+              <motion.span 
+                key={index}
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.05, type: "spring", stiffness: 200, damping: 10 }}
+                className="inline-block"
+              >
+                {isO ? (
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                    whileHover={{ scale: 1.2, color: "#f472b6", transition: { duration: 0.2 } }}
+                    className="inline-block text-purple-400 origin-center"
+                  >
+                    {letter}
+                  </motion.span>
+                ) : (
+                  <motion.span 
+                    whileHover={{ y: -4, color: "#d8b4fe", transition: { duration: 0.2 } }} 
+                    className="inline-block transition-colors"
+                  >
+                    {letter}
+                  </motion.span>
+                )}
+              </motion.span>
+            );
+          })}
         </div>
       </div>
 
@@ -82,7 +93,7 @@ export function Sidebar() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="flex-1 px-4 py-6 space-y-2"
+        className="flex-1 px-4 py-6 space-y-2 mt-4"
       >
         {navItems.map((item) => {
           const Icon = item.icon;
