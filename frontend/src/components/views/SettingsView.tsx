@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Bell, Shield, CreditCard, LayoutGrid, 
-  Check, Key, Smartphone, Laptop,
+  Check, Key, Smartphone, Laptop, Palette,
   Github, Slack, Trello, Twitter
 } from 'lucide-react';
 import { toast } from 'sonner';
