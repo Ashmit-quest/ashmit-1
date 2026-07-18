@@ -30,11 +30,7 @@ export default function Index() {
       case 'kanban': return <KanbanView />;
       case 'analytics': return <AnalyticsView />;
       case 'settings': return <SettingsView />;
-      default: return (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          <h2>Module in development</h2>
-        </div>
-      );
+      default: return <Overview />; // Default fallback explicitly avoids absolute blank renders
     }
   };
 
