@@ -1,9 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreHorizontal, Plus, MessageSquare, Paperclip, X, Tag as TagIcon, GripVertical } from 'lucide-react';
+import { 
+  MoreHorizontal, Plus, MessageSquare, Paperclip, 
+  Tag as TagIcon, GripVertical, Edit2, Trash2, Copy, Eraser
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Task = {
   id: string;
@@ -49,19 +59,20 @@ export function KanbanView() {
   const [isTaskDialog, setIsTaskDialog] = useState(false);
   const [isColDialog, setIsColDialog] = useState(false);
   
-  // New Task State
+  // Edit States
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingColumn, setEditingColumn] = useState<Column | null>(null);
+  
+  // Form States
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskTag, setNewTaskTag] = useState('Blog');
   const [activeColumnId, setActiveColumnId] = useState<string>('');
-
-  // New Col State
   const [newColTitle, setNewColTitle] = useState('');
 
   // --- Drag & Drop Handlers ---
   const handleDragStart = (e: React.DragEvent, task: Task) => {
     setDraggedTask(task);
     e.dataTransfer.effectAllowed = 'move';
-    // Small delay to allow the drag image to generate before adding opacity
     setTimeout(() => {
       const el = document.getElementById(`task-${task.id}`);
       if (el) el.style.opacity = '0.5';
@@ -92,11 +103,20 @@ export function KanbanView() {
     }
   };
 
-  // --- Actions ---
+  // --- Task Actions ---
   const handleAddTaskClick = (columnId: string) => {
+    setEditingTask(null);
     setActiveColumnId(columnId);
     setNewTaskTitle('');
     setNewTaskTag('Blog');
+    setIsTaskDialog(true);
+  };
+
+  const handleEditTaskClick = (task: Task) => {
+    setEditingTask(task);
+    setActiveColumnId(task.columnId);
+    setNewTaskTitle(task.title);
+    setNewTaskTag(task.tag);
     setIsTaskDialog(true);
   };
 
@@ -105,21 +125,54 @@ export function KanbanView() {
       toast.error('Task title is required');
       return;
     }
-    const newTask: Task = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newTaskTitle,
-      tag: newTaskTag,
-      comments: 0,
-      attachments: 0,
-      columnId: activeColumnId
-    };
-    setTasks([...tasks, newTask]);
+
+    if (editingTask) {
+      setTasks(tasks.map(t => 
+        t.id === editingTask.id 
+          ? { ...t, title: newTaskTitle, tag: newTaskTag } 
+          : t
+      ));
+      toast.success('Card updated successfully');
+    } else {
+      const newTask: Task = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: newTaskTitle,
+        tag: newTaskTag,
+        comments: 0,
+        attachments: 0,
+        columnId: activeColumnId
+      };
+      setTasks([...tasks, newTask]);
+      toast.success('Card added successfully');
+    }
     setIsTaskDialog(false);
-    toast.success('Card added successfully');
   };
 
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(tasks.filter(t => t.id !== taskId));
+    toast.success('Card deleted');
+  };
+
+  const handleDuplicateTask = (task: Task) => {
+    const duplicate: Task = {
+      ...task,
+      id: Math.random().toString(36).substr(2, 9),
+      title: `${task.title} (Copy)`,
+    };
+    setTasks([...tasks, duplicate]);
+    toast.success('Card duplicated');
+  };
+
+  // --- Column Actions ---
   const handleAddColClick = () => {
+    setEditingColumn(null);
     setNewColTitle('');
+    setIsColDialog(true);
+  };
+
+  const handleEditColClick = (column: Column) => {
+    setEditingColumn(column);
+    setNewColTitle(column.title);
     setIsColDialog(true);
   };
 
@@ -128,24 +181,33 @@ export function KanbanView() {
       toast.error('Column title is required');
       return;
     }
-    const newCol: Column = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: newColTitle,
-      color: 'border-white/20' // default neutral color for new columns
-    };
-    setColumns([...columns, newCol]);
+
+    if (editingColumn) {
+      setColumns(columns.map(c => 
+        c.id === editingColumn.id ? { ...c, title: newColTitle } : c
+      ));
+      toast.success('Column updated');
+    } else {
+      const newCol: Column = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: newColTitle,
+        color: 'border-white/20'
+      };
+      setColumns([...columns, newCol]);
+      toast.success('Column added');
+    }
     setIsColDialog(false);
-    toast.success('Column added');
   };
 
-  const handleTaskClick = (task: Task) => {
-    toast.info(`Opened: ${task.title}`, {
-      description: `Tag: ${task.tag} | Comments: ${task.comments}`
-    });
+  const handleClearColumn = (columnId: string) => {
+    setTasks(tasks.filter(t => t.columnId !== columnId));
+    toast.success('Column cleared');
   };
 
-  const handleColOptions = (colTitle: string) => {
-    toast.info(`Options for ${colTitle}`);
+  const handleDeleteColumn = (columnId: string) => {
+    setTasks(tasks.filter(t => t.columnId !== columnId));
+    setColumns(columns.filter(c => c.id !== columnId));
+    toast.success('Column deleted');
   };
 
   return (
@@ -182,12 +244,29 @@ export function KanbanView() {
                       {colTasks.length}
                     </span>
                   </h3>
-                  <button 
-                    onClick={() => handleColOptions(col.title)}
-                    className="text-white/50 hover:text-white transition-colors"
-                  >
-                    <MoreHorizontal size={18} />
-                  </button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="text-white/50 hover:text-white transition-colors outline-none">
+                        <MoreHorizontal size={18} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-[#111115] border border-white/10 text-white">
+                      <DropdownMenuItem onClick={() => handleEditColClick(col)} className="cursor-pointer hover:bg-white/10 focus:bg-white/10">
+                        <Edit2 size={14} className="mr-2" /> Rename Column
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleAddTaskClick(col.id)} className="cursor-pointer hover:bg-white/10 focus:bg-white/10">
+                        <Plus size={14} className="mr-2" /> Add Card
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-white/10" />
+                      <DropdownMenuItem onClick={() => handleClearColumn(col.id)} className="cursor-pointer hover:bg-white/10 focus:bg-white/10 text-amber-400 focus:text-amber-400">
+                        <Eraser size={14} className="mr-2" /> Clear All Cards
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteColumn(col.id)} className="cursor-pointer hover:bg-white/10 focus:bg-white/10 text-red-400 focus:text-red-400">
+                        <Trash2 size={14} className="mr-2" /> Delete Column
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <div className="flex-1 p-3 space-y-3 overflow-y-auto custom-scrollbar">
@@ -204,19 +283,36 @@ export function KanbanView() {
                         draggable
                         onDragStart={(e: any) => handleDragStart(e, task)}
                         onDragEnd={(e: any) => handleDragEnd(e, task)}
-                        onClick={() => handleTaskClick(task)}
+                        onClick={() => handleEditTaskClick(task)}
                         className="glass-card p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors group relative"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <span className="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white">
                             {task.tag}
                           </span>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleTaskClick(task); }}
-                            className="opacity-0 group-hover:opacity-100 text-white/50 hover:text-white transition-all"
-                          >
-                            <MoreHorizontal size={16} />
-                          </button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button 
+                                onClick={(e) => e.stopPropagation()} 
+                                className="opacity-0 group-hover:opacity-100 text-white/50 hover:text-white transition-all outline-none"
+                              >
+                                <MoreHorizontal size={16} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40 bg-[#111115] border border-white/10 text-white">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditTaskClick(task); }} className="cursor-pointer hover:bg-white/10 focus:bg-white/10">
+                                <Edit2 size={14} className="mr-2" /> Edit Card
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDuplicateTask(task); }} className="cursor-pointer hover:bg-white/10 focus:bg-white/10">
+                                <Copy size={14} className="mr-2" /> Duplicate
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/10" />
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="cursor-pointer hover:bg-white/10 focus:bg-white/10 text-red-400 focus:text-red-400">
+                                <Trash2 size={14} className="mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         <p className="text-sm font-bold text-white mb-4 leading-snug pr-4">{task.title}</p>
                         
@@ -254,12 +350,12 @@ export function KanbanView() {
         </div>
       </div>
 
-      {/* Add Task Dialog */}
+      {/* Task Dialog (Add / Edit) */}
       <Dialog open={isTaskDialog} onOpenChange={setIsTaskDialog}>
         <DialogContent className="bg-[#111115] border border-white/10 text-white sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              Add New Card
+              {editingTask ? 'Edit Card' : 'Add New Card'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 py-4">
@@ -300,18 +396,18 @@ export function KanbanView() {
               Cancel
             </Button>
             <Button onClick={handleSaveTask} className="bg-purple-600 hover:bg-purple-500 text-white">
-              Save Card
+              {editingTask ? 'Save Changes' : 'Save Card'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Add Column Dialog */}
+      {/* Column Dialog (Add / Edit) */}
       <Dialog open={isColDialog} onOpenChange={setIsColDialog}>
         <DialogContent className="bg-[#111115] border border-white/10 text-white sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              Add New Column
+              {editingColumn ? 'Rename Column' : 'Add New Column'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -332,7 +428,7 @@ export function KanbanView() {
               Cancel
             </Button>
             <Button onClick={handleSaveCol} className="bg-purple-600 hover:bg-purple-500 text-white">
-              Save Column
+              {editingColumn ? 'Save Changes' : 'Save Column'}
             </Button>
           </DialogFooter>
         </DialogContent>
