@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, Bell, Shield, Palette, CreditCard, LayoutGrid, 
-  Check, Key, Smartphone, Laptop, Moon, Sun, Monitor,
+  User, Bell, Shield, CreditCard, LayoutGrid, 
+  Check, Key, Smartphone, Laptop,
   Github, Slack, Trello, Twitter
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,7 +12,6 @@ import { useContentStore } from '@/store/useContentStore';
 const tabs = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'appearance', label: 'Appearance', icon: Palette },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'integrations', label: 'Integrations', icon: LayoutGrid },
@@ -20,13 +19,6 @@ const tabs = [
 
 export function SettingsView() {
   const [activeTab, setActiveTab] = useState('profile');
-  
-  const { 
-    theme, 
-    setTheme, 
-    accentColor, 
-    setAccentColor 
-  } = useContentStore();
 
   const [firstName, setFirstName] = useState('Jessica');
   const [lastName, setLastName] = useState('Smith');
@@ -50,52 +42,6 @@ export function SettingsView() {
       toast.info(`Notification preference updated`);
       return newState;
     });
-  };
-
-  const handleThemeChange = (newTheme: 'system' | 'light' | 'dark') => {
-    setTheme(newTheme);
-    toast.success(`Theme set to ${newTheme}`);
-    // Dynamically apply theme properties to root document
-    const root = window.document.documentElement;
-    if (newTheme === 'dark') {
-      root.classList.add('dark');
-      root.style.setProperty('--background', '240 10% 4%');
-      root.style.setProperty('--foreground', '0 0% 98%');
-      root.style.setProperty('--card', '240 10% 6%');
-      root.style.setProperty('--card-foreground', '0 0% 98%');
-    } else if (newTheme === 'light') {
-      root.classList.remove('dark');
-      root.style.setProperty('--background', '0 0% 98%');
-      root.style.setProperty('--foreground', '240 10% 4%');
-      root.style.setProperty('--card', '0 0% 100%');
-      root.style.setProperty('--card-foreground', '240 10% 4%');
-    } else {
-      root.classList.add('dark');
-      root.style.setProperty('--background', '240 10% 4%');
-      root.style.setProperty('--foreground', '0 0% 98%');
-      root.style.setProperty('--card', '240 10% 6%');
-      root.style.setProperty('--card-foreground', '0 0% 98%');
-    }
-  };
-
-  const handleAccentChange = (color: string) => {
-    setAccentColor(color);
-    toast.success(`Accent color updated to ${color}`);
-    
-    const root = window.document.documentElement;
-    // Map colors to primary theme HSL variables
-    const colorMap: Record<string, string> = {
-      purple: '270 100% 65%',
-      pink: '320 100% 60%',
-      blue: '210 100% 50%',
-      emerald: '150 100% 40%',
-      amber: '40 100% 50%'
-    };
-    
-    if (colorMap[color]) {
-      root.style.setProperty('--primary', colorMap[color]);
-      root.style.setProperty('--ring', colorMap[color]);
-    }
   };
 
   const handleChangeAvatar = () => {
@@ -267,66 +213,6 @@ export function SettingsView() {
                       </label>
                     </div>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'appearance' && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Appearance</h2>
-                  <p className="text-muted-foreground text-sm">Customize the look and feel of your dashboard.</p>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-white">Theme Preference</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[
-                      { id: 'light', icon: Sun, label: 'Light' },
-                      { id: 'dark', icon: Moon, label: 'Dark' },
-                      { id: 'system', icon: Monitor, label: 'System' },
-                    ].map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => handleThemeChange(t.id as any)}
-                        className={`flex flex-col items-center justify-center p-6 rounded-xl border transition-all ${
-                          theme === t.id 
-                            ? 'bg-purple-500/10 border-purple-500 text-purple-400' 
-                            : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
-                        }`}
-                        style={{ 
-                          borderColor: theme === t.id ? 'hsl(var(--primary))' : undefined,
-                          color: theme === t.id ? 'hsl(var(--primary))' : undefined
-                        }}
-                      >
-                        <t.icon size={24} className="mb-3" />
-                        <span className="font-medium text-sm">{t.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium text-white">Accent Color</h3>
-                  <div className="flex gap-4">
-                    {[
-                      { id: 'purple', class: 'bg-purple-500' },
-                      { id: 'pink', class: 'bg-pink-500' },
-                      { id: 'blue', class: 'bg-blue-500' },
-                      { id: 'emerald', class: 'bg-emerald-500' },
-                      { id: 'amber', class: 'bg-amber-500' },
-                    ].map((color) => (
-                      <button
-                        key={color.id}
-                        onClick={() => handleAccentChange(color.id)}
-                        className={`w-10 h-10 rounded-full ${color.class} flex items-center justify-center transition-transform hover:scale-110 ${
-                          accentColor === color.id ? 'ring-2 ring-white ring-offset-2 ring-offset-[#111115]' : ''
-                        }`}
-                      >
-                        {accentColor === color.id && <Check size={16} className="text-white" />}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
