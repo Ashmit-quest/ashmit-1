@@ -32,7 +32,7 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 border-r border-white/10 bg-black/20 backdrop-blur-xl flex flex-col z-20">
-      <div className="p-6 flex items-center gap-3 group cursor-pointer mt-2">
+      <div className="p-6 flex items-center gap-3 group cursor-pointer mt-2" onClick={() => setActiveTab('overview')}>
         {/* Rotating Icon Box */}
         <motion.div 
           animate={{ rotate: 360 }}

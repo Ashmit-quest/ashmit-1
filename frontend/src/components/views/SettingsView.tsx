@@ -24,23 +24,8 @@ export function SettingsView() {
   const [email, setEmail] = useState('jessica.smith@example.com');
   const [bio, setBio] = useState('Content creator & strategist. Building beautiful things on the internet.');
 
-  const [notifications, setNotifications] = useState({
-    campaign: true,
-    comments: true,
-    weekly: false,
-    product: false
-  });
-
   const handleSaveProfile = () => {
     toast.success('Profile updated successfully');
-  };
-
-  const handleToggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => {
-      const newState = { ...prev, [key]: !prev[key] };
-      toast.info(`Notification preference updated`);
-      return newState;
-    });
   };
 
   const handleChangeAvatar = () => {
@@ -71,7 +56,7 @@ export function SettingsView() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative z-30 ${
                   isActive 
                     ? 'text-white font-medium border border-white/5 shadow-sm bg-white/10' 
                     : 'text-muted-foreground hover:bg-white/5 hover:text-white'
@@ -80,7 +65,7 @@ export function SettingsView() {
                 {isActive && (
                   <motion.div 
                     layoutId="settings-active"
-                    className="absolute inset-0 bg-white/5 rounded-xl border border-white/5"
+                    className="absolute inset-0 bg-white/5 rounded-xl border border-white/5 -z-10"
                     transition={{ type: 'spring', stiffness: 150, damping: 18 }}
                   />
                 )}
