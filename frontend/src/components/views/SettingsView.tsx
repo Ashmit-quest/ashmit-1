@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  User, Bell, Shield, CreditCard, LayoutGrid, 
+  User, Shield, CreditCard, LayoutGrid, 
   Check, Key, Smartphone, Laptop, Palette,
   Github, Slack, Trello, Twitter
 } from 'lucide-react';
@@ -11,7 +11,6 @@ import { useContentStore } from '@/store/useContentStore';
 
 const tabs = [
   { id: 'profile', label: 'Profile', icon: User },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'billing', label: 'Billing', icon: CreditCard },
   { id: 'integrations', label: 'Integrations', icon: LayoutGrid },
@@ -180,39 +179,6 @@ export function SettingsView() {
                   >
                     <Check size={18} /> Save Changes
                   </motion.button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'notifications' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Notifications</h2>
-                  <p className="text-muted-foreground text-sm">Choose what updates you want to receive.</p>
-                </div>
-                <div className="space-y-4 pt-4">
-                  {[
-                    { id: 'campaign', title: "Campaign Updates", desc: "Get notified when a campaign state changes." },
-                    { id: 'comments', title: "Comments", desc: "Receive an alert when someone comments on your post." },
-                    { id: 'weekly', title: "Weekly Digest", desc: "A weekly summary of your content performance." },
-                    { id: 'product', title: "Product Updates", desc: "News about new features and updates." }
-                  ].map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
-                      <div>
-                        <h4 className="text-white font-medium">{item.title}</h4>
-                        <p className="text-muted-foreground text-sm">{item.desc}</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer" 
-                          checked={notifications[item.id as keyof typeof notifications]}
-                          onChange={() => handleToggleNotification(item.id as keyof typeof notifications)}
-                        />
-                        <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                      </label>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}
