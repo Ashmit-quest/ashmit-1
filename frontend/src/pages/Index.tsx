@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Toaster } from 'sonner';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { Overview } from '@/components/views/Overview';
@@ -8,9 +7,11 @@ import { CalendarView } from '@/components/views/CalendarView';
 import { KanbanView } from '@/components/views/KanbanView';
 import { AnalyticsView } from '@/components/views/AnalyticsView';
 import { SettingsView } from '@/components/views/SettingsView';
+import { useContentStore } from '@/store/useContentStore';
+import { Toaster } from 'sonner';
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const { activeTab } = useContentStore();
 
   const renderView = () => {
     switch (activeTab) {
@@ -35,7 +36,7 @@ export default function Index() {
       <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-teal-600/10 blur-[120px] pointer-events-none" />
 
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar />
       
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
         <Header />

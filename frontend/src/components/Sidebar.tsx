@@ -1,6 +1,7 @@
 import { LayoutDashboard, CalendarDays, KanbanSquare, Settings, PieChart, PenTool } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
+import { useContentStore } from '@/store/useContentStore';
 
 const navItems = [
   { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,7 +11,9 @@ const navItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
+export function Sidebar() {
+  const { activeTab, setActiveTab } = useContentStore();
+
   return (
     <aside className="w-64 border-r border-white/10 bg-black/20 backdrop-blur-xl flex flex-col z-20">
       <div className="p-6 flex items-center gap-3">

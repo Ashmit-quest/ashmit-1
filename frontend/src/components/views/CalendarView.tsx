@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, AlignLeft, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useContentStore, Post } from '@/store/useContentStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,30 +10,15 @@ import {
   isSameMonth, isSameDay, addDays, addWeeks, subWeeks, subDays
 } from 'date-fns';
 
-type CalendarEvent = {
-  id: string;
-  title: string;
-  date: Date;
-  color: string;
-  allDay: boolean;
-  time?: string;
-};
-
 const colors = [
   'bg-purple-500', 'bg-pink-500', 'bg-blue-500', 
   'bg-emerald-500', 'bg-amber-500', 'bg-red-500'
 ];
 
 export function CalendarView() {
+  const { posts, addPost, searchQuery } = useContentStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-  
-  // Initial mock events
-  const [events, setEvents] = useState<CalendarEvent[]>([
-    { id: '1', title: 'Weekly Sync', date: new Date(), color: 'bg-purple-500', allDay: false, time: '10:00' },
-    { id: '2', title: 'Product Launch', date: addDays(new Date(), 2), color: 'bg-pink-500', allDay: true },
-    { id: '3', title: 'Review Designs', date: addDays(new Date(), -1), color: 'bg-blue-500', allDay: false, time: '14:00' },
-  ]);
 
   // Dialog State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -41,6 +27,15 @@ export function CalendarView() {
   const [newEventColor, setNewEventColor] = useState('bg-purple-500');
   const [newEventIsAllDay, setNewEventIsAllDay] = useState(true);
   const [newEventTime, setNewEventTime] = useState('10:00');
+
+  // Filter posts based on header search
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tag.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [posts, searchQuery]);
 
   const next = () => {
     if (view === 'month') setCurrentDate(addMonths(currentDate, 1));
@@ -76,23 +71,24 @@ export function CalendarView() {
       toast.error('Event title is required');
       return;
     }
-    const newEvent: CalendarEvent = {
-      id: Math.random().toString(36).substr(2, 9),
+
+    addPost({
       title: newEventTitle,
-      date: selectedDate,
-      color: newEventColor,
-      allDay: newEventIsAllDay,
-      time: newEventIsAllDay ? undefined : newEventTime
-    };
-    setEvents([...events, newEvent]);
+      tag: 'Blog',
+      platform: 'Instagram',
+      status: 'Ready',
+      columnId: 'review',
+      date: selectedDate
+    });
+
     setIsDialogOpen(false);
     toast.success('Event added successfully');
   };
 
-  const handleEventClick = (e: React.MouseEvent, evt: CalendarEvent) => {
+  const handleEventClick = (e: React.MouseEvent, evt: Post) => {
     e.stopPropagation();
     toast.success(`Event: ${evt.title}`, {
-      description: `${format(evt.date, 'MMMM d, yyyy')}${evt.allDay ? ' (All Day)' : ` at ${evt.time}`}`
+      description: `${format(evt.date, 'MMMM d, yyyy')} | Platform: ${evt.platform}`
     });
   };
 
@@ -126,7 +122,7 @@ export function CalendarView() {
           {monthDays.map((d, i) => {
             const isCurrentMonth = isSameMonth(d, currentDate);
             const isDayToday = isSameDay(d, new Date());
-            const dayEvents = events.filter(e => isSameDay(e.date, d));
+            const dayEvents = filteredPosts.filter(e => isSameDay(new Date(e.date), d));
 
             return (
               <div
@@ -144,10 +140,9 @@ export function CalendarView() {
                     <div
                       key={evt.id}
                       onClick={(e) => handleEventClick(e, evt)}
-                      className={`${evt.color} bg-opacity-20 border border-white/10 text-white text-xs px-2 py-1 rounded truncate hover:bg-opacity-40 transition-colors font-medium flex items-center gap-1.5`}
+                      className="bg-purple-500 bg-opacity-20 border border-white/10 text-white text-xs px-2 py-1 rounded truncate hover:bg-opacity-40 transition-colors font-medium flex items-center gap-1.5"
                     >
-                      <div className={`w-1.5 h-1.5 rounded-full ${evt.color}`} />
-                      {evt.time && <span className="opacity-70">{evt.time}</span>}
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                       <span className="truncate">{evt.title}</span>
                     </div>
                   ))}
@@ -163,14 +158,14 @@ export function CalendarView() {
   // --- WEEK/DAY VIEW HELPERS ---
   const hours = Array.from({ length: 24 }).map((_, i) => i);
   const getHourEvents = (date: Date, hour: number) => {
-    return events.filter(e => {
-      if (!isSameDay(e.date, date) || e.allDay || !e.time) return false;
-      const eventHour = parseInt(e.time.split(':')[0], 10);
-      return eventHour === hour;
+    return filteredPosts.filter(e => {
+      if (!isSameDay(new Date(e.date), date)) return false;
+      // Simulated random distribution or fixed time slots for display
+      return (parseInt(e.id.slice(-1), 36) % 24) === hour;
     });
   };
   const getAllDayEvents = (date: Date) => {
-    return events.filter(e => isSameDay(e.date, date) && (e.allDay || !e.time));
+    return filteredPosts.filter(e => isSameDay(new Date(e.date), date));
   };
 
   // --- WEEK VIEW ---
@@ -193,8 +188,8 @@ export function CalendarView() {
                 </div>
               </div>
               <div className="p-1 min-h-[40px] space-y-1 bg-black/10">
-                {getAllDayEvents(d).map(evt => (
-                  <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className={`${evt.color} bg-opacity-20 border border-white/10 text-white text-xs px-2 py-1 rounded truncate cursor-pointer hover:bg-opacity-40`}>
+                {getAllDayEvents(d).slice(0, 2).map(evt => (
+                  <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className="bg-pink-500 bg-opacity-20 border border-white/10 text-white text-xs px-2 py-1 rounded truncate cursor-pointer hover:bg-opacity-40">
                     {evt.title}
                   </div>
                 ))}
@@ -215,8 +210,7 @@ export function CalendarView() {
                   className="border-r border-white/5 relative p-1 cursor-pointer hover:bg-white/[0.02] transition-colors"
                 >
                   {getHourEvents(d, h).map(evt => (
-                    <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className={`${evt.color} bg-opacity-30 border border-white/20 text-white text-xs p-1.5 rounded shadow-sm mb-1 cursor-pointer hover:bg-opacity-50`}>
-                      <div className="font-bold opacity-80 mb-0.5">{evt.time}</div>
+                    <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className="bg-purple-600 bg-opacity-30 border border-white/20 text-white text-xs p-1.5 rounded shadow-sm mb-1 cursor-pointer hover:bg-opacity-50">
                       <div className="truncate font-medium">{evt.title}</div>
                     </div>
                   ))}
@@ -247,7 +241,7 @@ export function CalendarView() {
             </div>
             <div className="p-2 min-h-[50px] space-y-1 bg-black/10 flex flex-wrap gap-2">
               {getAllDayEvents(d).map(evt => (
-                <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className={`${evt.color} bg-opacity-20 border border-white/10 text-white text-sm px-3 py-1.5 rounded truncate cursor-pointer hover:bg-opacity-40`}>
+                <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className="bg-pink-500 bg-opacity-20 border border-white/10 text-white text-sm px-3 py-1.5 rounded truncate cursor-pointer hover:bg-opacity-40">
                   {evt.title}
                 </div>
               ))}
@@ -265,8 +259,7 @@ export function CalendarView() {
                 className="border-r border-white/5 relative p-2 cursor-pointer hover:bg-white/[0.02] transition-colors"
               >
                 {getHourEvents(d, h).map(evt => (
-                  <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className={`${evt.color} bg-opacity-30 border border-white/20 text-white text-sm p-2 rounded shadow-sm mb-2 cursor-pointer hover:bg-opacity-50`}>
-                    <div className="font-bold opacity-80 mb-1">{evt.time}</div>
+                  <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className="bg-purple-600 bg-opacity-30 border border-white/20 text-white text-sm p-2 rounded shadow-sm mb-2 cursor-pointer hover:bg-opacity-50">
                     <div className="font-medium">{evt.title}</div>
                   </div>
                 ))}

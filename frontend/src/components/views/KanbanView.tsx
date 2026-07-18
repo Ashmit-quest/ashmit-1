@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MoreHorizontal, Plus, MessageSquare, Paperclip, 
   Tag as TagIcon, GripVertical, Edit2, Trash2, Copy, Eraser
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useContentStore, Post } from '@/store/useContentStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,15 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-type Task = {
-  id: string;
-  title: string;
-  tag: string;
-  comments: number;
-  attachments: number;
-  columnId: string;
-};
 
 type Column = {
   id: string;
@@ -37,30 +29,21 @@ const initialColumns: Column[] = [
   { id: 'published', title: 'Published', color: 'border-emerald-500' },
 ];
 
-const initialTasks: Task[] = [
-  { id: 't1', title: 'Top 10 UI Trends 2024', tag: 'Blog', comments: 3, attachments: 1, columnId: 'ideas' },
-  { id: 't2', title: 'Behind the scenes reel', tag: 'Instagram', comments: 0, attachments: 2, columnId: 'ideas' },
-  { id: 't3', title: 'Q3 Feature Announcement', tag: 'Newsletter', comments: 5, attachments: 0, columnId: 'drafting' },
-  { id: 't4', title: 'Case Study: Acme Corp', tag: 'Website', comments: 2, attachments: 4, columnId: 'review' },
-  { id: 't5', title: 'Founder Interview Video', tag: 'YouTube', comments: 8, attachments: 1, columnId: 'review' },
-  { id: 't6', title: 'September Update', tag: 'Email', comments: 1, attachments: 0, columnId: 'published' },
-];
-
 const availableTags = ['Blog', 'Instagram', 'Newsletter', 'Website', 'YouTube', 'Email', 'Twitter'];
 
 export function KanbanView() {
+  const { posts, addPost, updatePost, deletePost, duplicatePost, clearColumnPosts, searchQuery } = useContentStore();
   const [columns, setColumns] = useState<Column[]>(initialColumns);
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
   
   // Drag and Drop State
-  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [draggedTask, setDraggedTask] = useState<Post | null>(null);
 
   // Dialog States
   const [isTaskDialog, setIsTaskDialog] = useState(false);
   const [isColDialog, setIsColDialog] = useState(false);
   
   // Edit States
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Post | null>(null);
   const [editingColumn, setEditingColumn] = useState<Column | null>(null);
   
   // Form States
@@ -70,7 +53,7 @@ export function KanbanView() {
   const [newColTitle, setNewColTitle] = useState('');
 
   // --- Drag & Drop Handlers ---
-  const handleDragStart = (e: React.DragEvent, task: Task) => {
+  const handleDragStart = (e: React.DragEvent, task: Post) => {
     setDraggedTask(task);
     e.dataTransfer.effectAllowed = 'move';
     setTimeout(() => {
@@ -79,7 +62,7 @@ export function KanbanView() {
     }, 0);
   };
 
-  const handleDragEnd = (e: React.DragEvent, task: Task) => {
+  const handleDragEnd = (e: React.DragEvent, task: Post) => {
     const el = document.getElementById(`task-${task.id}`);
     if (el) el.style.opacity = '1';
     setDraggedTask(null);
@@ -95,9 +78,10 @@ export function KanbanView() {
     if (!draggedTask) return;
 
     if (draggedTask.columnId !== targetColumnId) {
-      setTasks(prev => prev.map(t => 
-        t.id === draggedTask.id ? { ...t, columnId: targetColumnId } : t
-      ));
+      updatePost(draggedTask.id, { 
+        columnId: targetColumnId as any,
+        status: targetColumnId === 'ideas' ? 'Draft' : targetColumnId === 'drafting' ? 'Review' : targetColumnId === 'review' ? 'Ready' : 'Published'
+      });
       const colName = columns.find(c => c.id === targetColumnId)?.title;
       toast.success(`Moved to ${colName}`);
     }
@@ -112,7 +96,7 @@ export function KanbanView() {
     setIsTaskDialog(true);
   };
 
-  const handleEditTaskClick = (task: Task) => {
+  const handleEditTaskClick = (task: Post) => {
     setEditingTask(task);
     setActiveColumnId(task.columnId);
     setNewTaskTitle(task.title);
@@ -127,39 +111,29 @@ export function KanbanView() {
     }
 
     if (editingTask) {
-      setTasks(tasks.map(t => 
-        t.id === editingTask.id 
-          ? { ...t, title: newTaskTitle, tag: newTaskTag } 
-          : t
-      ));
+      updatePost(editingTask.id, { title: newTaskTitle, tag: newTaskTag });
       toast.success('Card updated successfully');
     } else {
-      const newTask: Task = {
-        id: Math.random().toString(36).substr(2, 9),
+      addPost({
         title: newTaskTitle,
         tag: newTaskTag,
-        comments: 0,
-        attachments: 0,
-        columnId: activeColumnId
-      };
-      setTasks([...tasks, newTask]);
+        platform: 'Instagram',
+        status: activeColumnId === 'ideas' ? 'Draft' : activeColumnId === 'drafting' ? 'Review' : activeColumnId === 'review' ? 'Ready' : 'Published',
+        columnId: activeColumnId as any,
+        date: new Date()
+      });
       toast.success('Card added successfully');
     }
     setIsTaskDialog(false);
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
+    deletePost(taskId);
     toast.success('Card deleted');
   };
 
-  const handleDuplicateTask = (task: Task) => {
-    const duplicate: Task = {
-      ...task,
-      id: Math.random().toString(36).substr(2, 9),
-      title: `${task.title} (Copy)`,
-    };
-    setTasks([...tasks, duplicate]);
+  const handleDuplicateTask = (task: Post) => {
+    duplicatePost(task.id);
     toast.success('Card duplicated');
   };
 
@@ -200,15 +174,24 @@ export function KanbanView() {
   };
 
   const handleClearColumn = (columnId: string) => {
-    setTasks(tasks.filter(t => t.columnId !== columnId));
+    clearColumnPosts(columnId);
     toast.success('Column cleared');
   };
 
   const handleDeleteColumn = (columnId: string) => {
-    setTasks(tasks.filter(t => t.columnId !== columnId));
+    clearColumnPosts(columnId);
     setColumns(columns.filter(c => c.id !== columnId));
     toast.success('Column deleted');
   };
+
+  // Filter posts based on header search
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => 
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tag.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [posts, searchQuery]);
 
   return (
     <div className="h-full flex flex-col pb-8">
@@ -228,7 +211,7 @@ export function KanbanView() {
       <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
         <div className="flex gap-6 h-full min-w-max">
           {columns.map((col, colIdx) => {
-            const colTasks = tasks.filter(t => t.columnId === col.id);
+            const colTasks = filteredPosts.filter(t => t.columnId === col.id);
             
             return (
               <div 

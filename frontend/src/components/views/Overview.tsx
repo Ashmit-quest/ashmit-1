@@ -3,24 +3,13 @@ import { motion } from 'framer-motion';
 import { TrendingUp, Users, Eye, MessageSquare, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useContentStore } from '@/store/useContentStore';
 
-const stats = [
+const statsBase = [
   { label: 'Total Reach', value: '2.4M', change: '+12.5%', icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
   { label: 'Engagement', value: '142K', change: '+8.2%', icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' },
   { label: 'Impressions', value: '5.1M', change: '+24.1%', icon: Eye, color: 'text-pink-400', bg: 'bg-pink-400/10' },
   { label: 'Comments', value: '12.4K', change: '-2.4%', icon: MessageSquare, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-];
-
-const upcomingPosts = [
-  { title: 'Q3 Product Launch Video', platform: 'YouTube', date: 'Today, 2:00 PM', status: 'Ready' },
-  { title: '10 Tips for Productivity', platform: 'Instagram', date: 'Tomorrow, 10:00 AM', status: 'Review' },
-  { title: 'Weekly Newsletter #42', platform: 'Email', date: 'Oct 15, 8:00 AM', status: 'Draft' },
-];
-
-const extendedPosts = [
-  ...upcomingPosts,
-  { title: 'Dribbble Case Study', platform: 'Dribbble', date: 'Oct 20, 9:00 AM', status: 'Draft' },
-  { title: 'Founder Q&A Session', platform: 'Twitter', date: 'Oct 22, 4:00 PM', status: 'Ready' }
 ];
 
 const chartData = {
@@ -29,10 +18,24 @@ const chartData = {
 };
 
 export function Overview() {
+  const { posts, searchQuery } = useContentStore();
   const [timeframe, setTimeframe] = useState('7days');
   const [isViewAllOpen, setIsViewAllOpen] = useState(false);
 
   const currentChartData = chartData[timeframe as keyof typeof chartData];
+
+  // Filter posts based on header search query
+  const filteredPosts = posts.filter(post => 
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.tag.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Dynamic calculations based on store posts
+  const draftCount = posts.filter(p => p.columnId === 'ideas' || p.status === 'Draft').length;
+  const reviewCount = posts.filter(p => p.columnId === 'drafting' || p.status === 'Review').length;
+  const readyCount = posts.filter(p => p.columnId === 'review' || p.status === 'Ready').length;
+  const publishedCount = posts.filter(p => p.columnId === 'published' || p.status === 'Published').length;
 
   const handleStatClick = (stat: any) => {
     toast.success(`Viewing ${stat.label} analytics`, {
@@ -59,8 +62,28 @@ export function Overview() {
         <p className="text-muted-foreground text-lg">Here's what's happening with your content today.</p>
       </div>
 
+      {/* Dynamic Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+        <div className="text-center p-3">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Ideas / Drafts</p>
+          <span className="text-2xl font-bold text-white">{draftCount}</span>
+        </div>
+        <div className="text-center p-3 border-l border-white/10">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">In Review</p>
+          <span className="text-2xl font-bold text-white">{reviewCount}</span>
+        </div>
+        <div className="text-center p-3 border-l border-white/10">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Ready to Post</p>
+          <span className="text-2xl font-bold text-white">{readyCount}</span>
+        </div>
+        <div className="text-center p-3 border-l border-white/10">
+          <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Published</p>
+          <span className="text-2xl font-bold text-emerald-400">{publishedCount}</span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => {
+        {statsBase.map((stat, idx) => {
           const Icon = stat.icon;
           const isPositive = stat.change.startsWith('+');
           return (
@@ -137,7 +160,7 @@ export function Overview() {
           className="glass-card rounded-2xl p-6 border-white/5 flex flex-col"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Upcoming</h2>
+            <h2 className="text-xl font-bold text-white">Upcoming & Active</h2>
             <button 
               onClick={() => setIsViewAllOpen(true)}
               className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors"
@@ -145,28 +168,35 @@ export function Overview() {
               View all
             </button>
           </div>
-          <div className="space-y-4 flex-1">
-            {upcomingPosts.map((post, i) => (
-              <div 
-                key={i} 
-                onClick={() => handlePostClick(post)}
-                className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">{post.title}</h4>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider
-                    ${post.status === 'Ready' ? 'bg-emerald-400/20 text-emerald-400' : 
-                      post.status === 'Review' ? 'bg-amber-400/20 text-amber-400' : 
-                      'bg-white/10 text-white/60'}`}>
-                    {post.status}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-xs text-muted-foreground font-medium">
-                  <span>{post.platform}</span>
-                  <span>{post.date}</span>
-                </div>
+          <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-1 max-h-[350px]">
+            {filteredPosts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm font-medium">
+                No matching posts found.
               </div>
-            ))}
+            ) : (
+              filteredPosts.map((post) => (
+                <div 
+                  key={post.id} 
+                  onClick={() => handlePostClick(post)}
+                  className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer group"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-sm font-bold text-white group-hover:text-purple-300 transition-colors">{post.title}</h4>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider
+                      ${post.status === 'Ready' ? 'bg-emerald-400/20 text-emerald-400' : 
+                        post.status === 'Review' ? 'bg-amber-400/20 text-amber-400' : 
+                        post.status === 'Published' ? 'bg-purple-500/20 text-purple-400' :
+                        'bg-white/10 text-white/60'}`}>
+                      {post.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-muted-foreground font-medium">
+                    <span>{post.platform} • {post.tag}</span>
+                    <span>Just now</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </motion.div>
       </div>
@@ -174,12 +204,12 @@ export function Overview() {
       <Dialog open={isViewAllOpen} onOpenChange={setIsViewAllOpen}>
         <DialogContent className="bg-[#111115] border border-white/10 text-white sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">All Upcoming Posts</DialogTitle>
+            <DialogTitle className="text-xl font-bold">All Marketing Posts</DialogTitle>
           </DialogHeader>
           <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-            {extendedPosts.map((post, i) => (
+            {posts.map((post) => (
               <div 
-                key={i} 
+                key={post.id} 
                 onClick={() => {
                   handlePostClick(post);
                   setIsViewAllOpen(false);
@@ -191,13 +221,14 @@ export function Overview() {
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider
                     ${post.status === 'Ready' ? 'bg-emerald-400/20 text-emerald-400' : 
                       post.status === 'Review' ? 'bg-amber-400/20 text-amber-400' : 
+                      post.status === 'Published' ? 'bg-purple-500/20 text-purple-400' :
                       'bg-white/10 text-white/60'}`}>
                     {post.status}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-muted-foreground font-medium">
-                  <span>{post.platform}</span>
-                  <span>{post.date}</span>
+                  <span>{post.platform} • {post.tag}</span>
+                  <span>Just now</span>
                 </div>
               </div>
             ))}
