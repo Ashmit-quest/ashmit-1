@@ -35,18 +35,11 @@ export function KanbanView() {
   const { posts, addPost, updatePost, deletePost, duplicatePost, clearColumnPosts, searchQuery } = useContentStore();
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   
-  // Drag and Drop State
   const [draggedTask, setDraggedTask] = useState<Post | null>(null);
-
-  // Dialog States
   const [isTaskDialog, setIsTaskDialog] = useState(false);
   const [isColDialog, setIsColDialog] = useState(false);
-  
-  // Edit States
   const [editingTask, setEditingTask] = useState<Post | null>(null);
   const [editingColumn, setEditingColumn] = useState<Column | null>(null);
-  
-  // Form States
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskTag, setNewTaskTag] = useState('Blog');
   const [activeColumnId, setActiveColumnId] = useState<string>('');
@@ -87,7 +80,6 @@ export function KanbanView() {
     }
   };
 
-  // --- Task Actions ---
   const handleAddTaskClick = (columnId: string) => {
     setEditingTask(null);
     setActiveColumnId(columnId);
@@ -137,7 +129,6 @@ export function KanbanView() {
     toast.success('Card duplicated');
   };
 
-  // --- Column Actions ---
   const handleAddColClick = () => {
     setEditingColumn(null);
     setNewColTitle('');
@@ -184,7 +175,6 @@ export function KanbanView() {
     toast.success('Column deleted');
   };
 
-  // Filter posts based on header search
   const filteredPosts = useMemo(() => {
     return posts.filter(post => 
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -200,12 +190,14 @@ export function KanbanView() {
           <h1 className="text-3xl font-bold tracking-tight text-white">Content Board</h1>
           <p className="text-muted-foreground text-lg">Track your content pipeline</p>
         </div>
-        <button 
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleAddColClick}
           className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors border border-white/10 flex items-center gap-2 shadow-sm"
         >
           <Plus size={18} /> Add Column
-        </button>
+        </motion.button>
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
@@ -214,8 +206,11 @@ export function KanbanView() {
             const colTasks = filteredPosts.filter(t => t.columnId === col.id);
             
             return (
-              <div 
+              <motion.div 
                 key={col.id} 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: colIdx * 0.08, type: 'spring' }}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, col.id)}
                 className="w-80 flex flex-col bg-black/20 backdrop-blur-md rounded-2xl border border-white/5 h-full"
@@ -253,21 +248,22 @@ export function KanbanView() {
                 </div>
 
                 <div className="flex-1 p-3 space-y-3 overflow-y-auto custom-scrollbar">
-                  <AnimatePresence>
-                    {colTasks.map((task, i) => (
+                  <AnimatePresence mode="popLayout">
+                    {colTasks.map((task) => (
                       <motion.div
                         key={task.id}
                         id={`task-${task.id}`}
                         layoutId={`task-${task.id}`}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.2 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 120, damping: 18 }}
                         draggable
                         onDragStart={(e: any) => handleDragStart(e, task)}
                         onDragEnd={(e: any) => handleDragEnd(e, task)}
                         onClick={() => handleEditTaskClick(task)}
-                        className="glass-card p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors group relative"
+                        whileHover={{ y: -2, scale: 1.01 }}
+                        className="glass-card p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-white/20 transition-all duration-200 group relative"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <span className="text-xs font-bold px-2 py-1 rounded bg-white/10 text-white">
@@ -327,13 +323,13 @@ export function KanbanView() {
                     <Plus size={16} /> Add Card
                   </button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       </div>
 
-      {/* Task Dialog (Add / Edit) */}
+      {/* Task Dialog */}
       <Dialog open={isTaskDialog} onOpenChange={setIsTaskDialog}>
         <DialogContent className="bg-[#111115] border border-white/10 text-white sm:max-w-[400px]">
           <DialogHeader>
@@ -385,7 +381,7 @@ export function KanbanView() {
         </DialogContent>
       </Dialog>
 
-      {/* Column Dialog (Add / Edit) */}
+      {/* Column Dialog */}
       <Dialog open={isColDialog} onOpenChange={setIsColDialog}>
         <DialogContent className="bg-[#111115] border border-white/10 text-white sm:max-w-[400px]">
           <DialogHeader>

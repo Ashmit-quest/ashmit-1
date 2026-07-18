@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useContentStore, Post } from '@/store/useContentStore';
@@ -19,6 +19,7 @@ export function CalendarView() {
   const { posts, addPost, searchQuery } = useContentStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
 
   // Dialog State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,12 +39,14 @@ export function CalendarView() {
   }, [posts, searchQuery]);
 
   const next = () => {
+    setDirection('next');
     if (view === 'month') setCurrentDate(addMonths(currentDate, 1));
     else if (view === 'week') setCurrentDate(addWeeks(currentDate, 1));
     else setCurrentDate(addDays(currentDate, 1));
   };
 
   const prev = () => {
+    setDirection('prev');
     if (view === 'month') setCurrentDate(subMonths(currentDate, 1));
     else if (view === 'week') setCurrentDate(subWeeks(currentDate, 1));
     else setCurrentDate(subDays(currentDate, 1));
@@ -108,9 +111,34 @@ export function CalendarView() {
     return days;
   }, [currentDate]);
 
+  const slideVariants = {
+    enter: (dir: 'next' | 'prev') => ({
+      x: dir === 'next' ? 40 : -40,
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 120, damping: 18 }
+    },
+    exit: (dir: 'next' | 'prev') => ({
+      x: dir === 'next' ? -40 : 40,
+      opacity: 0,
+      transition: { duration: 0.15 }
+    })
+  };
+
   const renderMonth = () => {
     return (
-      <div className="flex-1 flex flex-col min-h-0 bg-[#111115]/50">
+      <motion.div 
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        key={currentDate.toString() + 'month'}
+        className="flex-1 flex flex-col min-h-0 bg-[#111115]/50"
+      >
         <div className="grid grid-cols-7 border-b border-white/10 bg-white/5">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
             <div key={d} className="py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -137,21 +165,24 @@ export function CalendarView() {
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-1">
                   {dayEvents.map(evt => (
-                    <div
+                    <motion.div
                       key={evt.id}
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.02 }}
                       onClick={(e) => handleEventClick(e, evt)}
-                      className="bg-purple-500 bg-opacity-20 border border-white/10 text-white text-xs px-2 py-1 rounded truncate hover:bg-opacity-40 transition-colors font-medium flex items-center gap-1.5"
+                      className="bg-purple-500 bg-opacity-20 border border-white/10 text-white text-xs px-2 py-1 rounded truncate hover:bg-opacity-40 transition-all font-medium flex items-center gap-1.5"
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                       <span className="truncate">{evt.title}</span>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -160,7 +191,6 @@ export function CalendarView() {
   const getHourEvents = (date: Date, hour: number) => {
     return filteredPosts.filter(e => {
       if (!isSameDay(new Date(e.date), date)) return false;
-      // Simulated random distribution or fixed time slots for display
       return (parseInt(e.id.slice(-1), 36) % 24) === hour;
     });
   };
@@ -174,7 +204,15 @@ export function CalendarView() {
     const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
 
     return (
-      <div className="flex-1 flex flex-col min-h-0 bg-[#111115]/50">
+      <motion.div 
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        key={currentDate.toString() + 'week'}
+        className="flex-1 flex flex-col min-h-0 bg-[#111115]/50"
+      >
         <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b border-white/10 bg-white/5 z-10">
           <div className="w-16 border-r border-white/5 flex flex-col justify-end p-2 text-[10px] text-muted-foreground text-right border-b border-white/5">
             GMT
@@ -210,16 +248,21 @@ export function CalendarView() {
                   className="border-r border-white/5 relative p-1 cursor-pointer hover:bg-white/[0.02] transition-colors"
                 >
                   {getHourEvents(d, h).map(evt => (
-                    <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className="bg-purple-600 bg-opacity-30 border border-white/20 text-white text-xs p-1.5 rounded shadow-sm mb-1 cursor-pointer hover:bg-opacity-50">
+                    <motion.div 
+                      key={evt.id} 
+                      whileHover={{ scale: 1.02 }}
+                      onClick={(e) => handleEventClick(e, evt)} 
+                      className="bg-purple-600 bg-opacity-30 border border-white/20 text-white text-xs p-1.5 rounded shadow-sm mb-1 cursor-pointer hover:bg-opacity-50"
+                    >
                       <div className="truncate font-medium">{evt.title}</div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ))}
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -227,7 +270,15 @@ export function CalendarView() {
   const renderDay = () => {
     const d = currentDate;
     return (
-      <div className="flex-1 flex flex-col min-h-0 bg-[#111115]/50">
+      <motion.div 
+        custom={direction}
+        variants={slideVariants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        key={currentDate.toString() + 'day'}
+        className="flex-1 flex flex-col min-h-0 bg-[#111115]/50"
+      >
         <div className="grid grid-cols-[auto_1fr] border-b border-white/10 bg-white/5 z-10">
           <div className="w-16 border-r border-white/5 flex flex-col justify-end p-2 text-[10px] text-muted-foreground text-right border-b border-white/5">
             GMT
@@ -259,15 +310,20 @@ export function CalendarView() {
                 className="border-r border-white/5 relative p-2 cursor-pointer hover:bg-white/[0.02] transition-colors"
               >
                 {getHourEvents(d, h).map(evt => (
-                  <div key={evt.id} onClick={(e) => handleEventClick(e, evt)} className="bg-purple-600 bg-opacity-30 border border-white/20 text-white text-sm p-2 rounded shadow-sm mb-2 cursor-pointer hover:bg-opacity-50">
+                  <motion.div 
+                    key={evt.id} 
+                    whileHover={{ scale: 1.02 }}
+                    onClick={(e) => handleEventClick(e, evt)} 
+                    className="bg-purple-600 bg-opacity-30 border border-white/20 text-white text-sm p-2 rounded shadow-sm mb-2 cursor-pointer hover:bg-opacity-50"
+                  >
                     <div className="font-medium">{evt.title}</div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -314,9 +370,11 @@ export function CalendarView() {
 
       {/* CALENDAR BODY */}
       <div className="flex-1 glass-card rounded-2xl border-white/5 overflow-hidden flex flex-col shadow-lg">
-        {view === 'month' && renderMonth()}
-        {view === 'week' && renderWeek()}
-        {view === 'day' && renderDay()}
+        <AnimatePresence mode="wait" initial={false}>
+          {view === 'month' && renderMonth()}
+          {view === 'week' && renderWeek()}
+          {view === 'day' && renderDay()}
+        </AnimatePresence>
       </div>
 
       {/* ADD EVENT DIALOG */}
