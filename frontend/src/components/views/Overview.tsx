@@ -4,6 +4,7 @@ import { TrendingUp, Users, Eye, MessageSquare, ArrowUpRight } from 'lucide-reac
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useContentStore } from '@/store/useContentStore';
+import { AnimatedNumber } from '@/components/ui/animated-number';
 
 const statsBase = [
   { label: 'Total Reach', value: '2.4M', change: '+12.5%', icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
@@ -108,7 +109,9 @@ export function Overview() {
             className={`text-center p-3 ${i > 0 ? 'border-l border-white/10' : ''}`}
           >
             <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">{item.label}</p>
-            <span className={`text-2xl font-bold ${item.color}`}>{item.count}</span>
+            <span className={`text-2xl font-bold ${item.color}`}>
+              <AnimatedNumber value={item.count} />
+            </span>
           </motion.div>
         ))}
       </motion.div>
@@ -139,11 +142,13 @@ export function Overview() {
                     <Icon size={24} />
                   </div>
                   <div className={`flex items-center text-sm font-medium ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {stat.change}
+                    <AnimatedNumber value={stat.change} />
                     <ArrowUpRight size={16} className={`ml-1 ${!isPositive && 'rotate-90'}`} />
                   </div>
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-1 group-hover:text-purple-400 transition-colors relative z-10">{stat.value}</h3>
+                <h3 className="text-3xl font-bold text-white mb-1 group-hover:text-purple-400 transition-colors relative z-10">
+                  <AnimatedNumber value={stat.value} />
+                </h3>
                 <p className="text-muted-foreground font-medium relative z-10">{stat.label}</p>
               </div>
             </motion.div>

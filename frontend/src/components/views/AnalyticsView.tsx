@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ArrowUpRight, Activity, Users, Share2, MousePointerClick } from 'lucide-react';
+import { AnimatedNumber } from '@/components/ui/animated-number';
 
 const performanceData = [
   { name: 'Mon', views: 4000, engagement: 2400 },
@@ -116,7 +117,9 @@ export function AnalyticsView() {
                 <div>
                   <p className="text-muted-foreground font-medium text-sm">{stat.label}</p>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
+                    <h3 className="text-2xl font-bold text-white">
+                      <AnimatedNumber value={stat.value} />
+                    </h3>
                     <ArrowUpRight size={16} className="text-emerald-400" />
                   </div>
                 </div>
@@ -177,7 +180,9 @@ export function AnalyticsView() {
               <div key={item.name} className="space-y-2">
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-white">{item.name}</span>
-                  <span className="text-muted-foreground">{item.value}%</span>
+                  <span className="text-muted-foreground">
+                    <AnimatedNumber value={item.value} />%
+                  </span>
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
                   <motion.div 

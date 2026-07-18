@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useContentStore, Post } from '@/store/useContentStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { AnimatedNumber } from '@/components/ui/animated-number';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -219,7 +220,7 @@ export function KanbanView() {
                   <h3 className="font-bold text-white flex items-center gap-2">
                     {col.title}
                     <span className="bg-white/10 text-white/70 text-xs px-2 py-0.5 rounded-full">
-                      {colTasks.length}
+                      <AnimatedNumber value={colTasks.length} />
                     </span>
                   </h3>
                   
@@ -302,12 +303,12 @@ export function KanbanView() {
                         <div className="flex items-center gap-4 text-muted-foreground text-xs font-medium">
                           {task.comments > 0 && (
                             <div className="flex items-center gap-1 hover:text-white transition-colors">
-                              <MessageSquare size={14} /> {task.comments}
+                              <MessageSquare size={14} /> <AnimatedNumber value={task.comments} />
                             </div>
                           )}
                           {task.attachments > 0 && (
                             <div className="flex items-center gap-1 hover:text-white transition-colors">
-                              <Paperclip size={14} /> {task.attachments}
+                              <Paperclip size={14} /> <AnimatedNumber value={task.attachments} />
                             </div>
                           )}
                           <div className="ml-auto w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-background shadow-sm" />
