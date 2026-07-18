@@ -139,18 +139,15 @@ export default function Index() {
       <div className="flex-1 flex flex-col relative z-20 overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-8 scroll-smooth">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 15, scale: 0.99 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.99 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="h-full max-w-7xl mx-auto"
-            >
-              {renderView()}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="h-full max-w-7xl mx-auto"
+          >
+            {renderView()}
+          </motion.div>
         </main>
       </div>
     </div>

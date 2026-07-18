@@ -56,7 +56,7 @@ export function SettingsView() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative z-30 ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative ${
                   isActive 
                     ? 'text-white font-medium border border-white/5 shadow-sm bg-white/10' 
                     : 'text-muted-foreground hover:bg-white/5 hover:text-white'
@@ -64,8 +64,7 @@ export function SettingsView() {
               >
                 {isActive && (
                   <motion.div 
-                    layoutId="settings-active"
-                    className="absolute inset-0 bg-white/5 rounded-xl border border-white/5 -z-10"
+                    className="absolute inset-0 bg-white/5 rounded-xl border border-white/5"
                     transition={{ type: 'spring', stiffness: 150, damping: 18 }}
                   />
                 )}
